@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dropdown Example</title>
+</head>
+<body>
+  <label for="clientDropdown">Select a Client</label>
+  <select id="clientDropdown">
+    <!--Options will be dynamically populated here-->
+  </select>
+  <label for="listDropdown">Select a list:</label>
+  <select id="listDropdown">
+    <!-- Options will be dynamically populated here -->
+  </select>
+
+  // In your HTML file
+  <script type="module">
+    import { fetchDataFromApi } from '/scripts/apiRequests.js';
+    const clientId = '18f4b1bf232cbbfff1556e246701bda5'
+  
+    const listDropdown = document.getElementById('listDropdown');
+    const clientDropdown = document.getElementById('clientDropdown');
+
+    async function populateClientDropdown() {
+      try {
+        const data = await fetchDataFromApi(`/api/clients`);
+        // populate dropdown options using the data
+        const dropdown = document.getElementById('clientDropdown')
+        //clear existing items
+        dropdown.innerHTML = '';
+        //populate dropdown options
+        data.forEach (item => {
+          const option = document.createElement('option');
+          option.value = item.ClientID;
+          option.textContent = item.Name;
+          dropdown.appendChild(option);
+        });
+        // Custom event with data
+        const event = new CustomEvent('clientDropdownSelection', {detail: data});
+        document.dispatchEvent(event);
+      } catch (error) {
+        console.error('Error populating dropdown:', error);
+      }
+    }
+
+    document.addEventListener('clientDropdownSelection', function(event) {
+      const data = event.detail;
+      populateListDropdown(data);
+    })
+  
+    async function populateListDropdown(clientData) {
+      try {
+        const data = await fetchDataFromApi(`/api/lists/${clientData.clientID}`);
+        // Populate dropdown options using the data
+        const dropdown = document.getElementById('listDropdown');
+
+        //clear existing options
+        dropdown.innerHTML = '';
+
+        //populate dropdown options
+        data.forEach (item => {
+          const option = document.createElement('option');
+          option.value = item.ListID;
+          option.textContent = item.Name;
+          dropdown.appendChild(option);
+        })
+      } catch (error) {
+        console.error('Error populating dropdown:', error);
+      }
+    }
+  
+    // Call the function to populate the dropdown when the page loads
+    populateClientDropdown();
+  
+    // Add event listener for dropdown change
+    listDropdown.addEventListener('change', async function() {
+      // Handle dropdown change event
+    });
+  </script>
+  
+</body>
+</html>
