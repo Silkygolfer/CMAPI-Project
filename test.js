@@ -1,6 +1,11 @@
+require('dotenv').config({ path: 'local.env'});
+
+const apiKey = process.env.API_KEY;
+const auth = `Basic ${Buffer.from(`${apiKey}`).toString('base64')}`;
+
 fetch("https://api.createsend.com/api/v3.3/clients.json", {
   "headers": {
-    "authorization": "Basic VGswbXY3RU5ucllFOVlhSmt5dUtpa3E4Q1JwVms2aXRTczBNR1lyVFh4aUhveUNqTlhqQ08ydVVZLzZJSzNyanN4NXVjcUFmOGxOZm1JZ1NDNzJnbTF3aDZjN0RSam41SUErbVJVdW96ZEZUYitmMGIzb1M3RmNvWXVQL1BzblRuT3BoMU5HZVZRR0g1UGZ4Q3M5dmVBPT06"
+    "authorization": `${auth}`
   }
 })
 .then(response => {
