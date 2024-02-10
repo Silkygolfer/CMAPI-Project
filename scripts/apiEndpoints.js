@@ -1,4 +1,8 @@
-const apiKey = `Basic ${btoa('Tk0mv7ENnrYE9YaJkyuKikq8CRpVk6itSs0MGYrTXxiHoyCjNXjCO2uUY/6IK3rjsx5ucqAf8lNfmIgSC72gm1wh6c7DRjn5IA+mRUuozdFTb+f0b3oS7FcoYuP/PsnTnOph1NGeVQGH5PfxCs9veA==')}`;
+require('dotenv').config({ path: '/Users/Admin/Desktop/Campaign Monitor API + Website Build/local.env' }); // Specify the path to your .env file
+
+const unencodedApiKey = process.env.API_KEY;
+apiKey = `Basic ${Buffer.from(`${unencodedApiKey}:`).toString('base64')}`;
+
 
 const apiEndpoints = {
     apiKey,

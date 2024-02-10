@@ -8,20 +8,27 @@
 <body>
   <label for="clientDropdown">Select a Client</label>
   <select id="clientDropdown">
+    <option value="">Select a Client</option>
     <!--Options will be dynamically populated here-->
   </select>
   <label for="listDropdown">Select a list:</label>
   <select id="listDropdown">
+    <option value="Select a List"></option>
     <!-- Options will be dynamically populated here -->
   </select>
+  <div>
+    <table id="customerTable">
+      <!--Table rows will dynamically populate here-->
+    </table>
+  </div>
 
-  // In your HTML file
+  
   <script type="module">
     import { fetchDataFromApi } from '/scripts/apiRequests.js';
-    const clientId = '18f4b1bf232cbbfff1556e246701bda5'
   
     const listDropdown = document.getElementById('listDropdown');
     const clientDropdown = document.getElementById('clientDropdown');
+    const customerTable = document.getElementById('customerTable');
 
     async function populateClientDropdown() {
       try {
@@ -30,34 +37,37 @@
         const dropdown = document.getElementById('clientDropdown')
         //clear existing items
         dropdown.innerHTML = '';
+        //default option
+        const defaultOption = document.createElement('option');
+        defaultOption.value = ''
+        defaultOption.text = 'Select a Client';
+        dropdown.appendChild(defaultOption);
         //populate dropdown options
         data.forEach (item => {
           const option = document.createElement('option');
           option.value = item.ClientID;
           option.textContent = item.Name;
           dropdown.appendChild(option);
-        });
-        // Custom event with data
-        const event = new CustomEvent('clientDropdownSelection', {detail: data});
-        document.dispatchEvent(event);
+        })
       } catch (error) {
-        console.error('Error populating dropdown:', error);
+        console.error('Error populating list dropdown: ', error);
       }
-    }
-
-    document.addEventListener('clientDropdownSelection', function(event) {
-      const data = event.detail;
-      populateListDropdown(data);
-    })
+    };
   
     async function populateListDropdown(clientData) {
       try {
-        const data = await fetchDataFromApi(`/api/lists/${clientData.clientID}`);
+        const data = await fetchDataFromApi(`/api/lists/${clientData}`);
         // Populate dropdown options using the data
         const dropdown = document.getElementById('listDropdown');
 
         //clear existing options
         dropdown.innerHTML = '';
+
+        //default option
+        const defaultOption = document.createElement('option');
+        defaultOption.value = ''
+        defaultOption.text = 'Select a List';
+        dropdown.appendChild(defaultOption);
 
         //populate dropdown options
         data.forEach (item => {
@@ -70,14 +80,46 @@
         console.error('Error populating dropdown:', error);
       }
     }
+
+    async function populateCustomerTable(listID) {
+      const response = await fetchDataFromApi(`/api/customers/${listID}`);
+      //populate table data
+      const table = document.getElementById('customerTable');
+      //get Array data
+      const data = response.Results;
+       //clear existing options
+      table.innerHTML = ''
+      //populate table data
+      data.forEach (item => {
+        const row = table.insertRow();
+        const cell1 = row.insertCell(0);
+        const cell2 = row.insertCell(1);
+        cell1.textContent = item.EmailAddress;
+        cell2.textContent = item.Name;
+      });
+    }
   
     // Call the function to populate the dropdown when the page loads
     populateClientDropdown();
   
-    // Add event listener for dropdown change
-    listDropdown.addEventListener('change', async function() {
-      // Handle dropdown change event
+ // Add event listener for client dropdown change
+ clientDropdown.addEventListener('change', function() {
+      const selectedClientId = this.value;
+      // Clear existing options in the list dropdown
+      listDropdown.innerHTML = '';
+      // Populate list dropdown based on the selected client ID
+      console.log(selectedClientId);
+      populateListDropdown(selectedClientId);
     });
+
+  // Add event listener for List dropdown change
+  listDropdown.addEventListener('change', function() {
+    const selectedListId = this.value.toString();
+    //Clear existing options in table
+    customerTable.innerHTML = '';
+    //populate table based on selected List ID
+    populateCustomerTable(selectedListId);
+  })
   </script>
   
 </body>
