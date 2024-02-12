@@ -16,6 +16,7 @@
     <option value="Select a List"></option>
     <!-- Options will be dynamically populated here -->
   </select>
+  <a href="upload.html"><button>Go to Upload Page</button></a>
   <div>
     <table id="customerTable">
       <!--Table rows will dynamically populate here-->
@@ -32,7 +33,11 @@
 
     async function populateClientDropdown() {
       try {
-        const data = await fetchDataFromApi(`/api/clients`);
+        const response = await fetch(`/api/clients`, {
+          method: 'GET'
+        });
+        //return data to JSON
+        const data = await response.json();
         // populate dropdown options using the data
         const dropdown = document.getElementById('clientDropdown')
         //clear existing items
@@ -56,7 +61,14 @@
   
     async function populateListDropdown(clientData) {
       try {
-        const data = await fetchDataFromApi(`/api/lists/${clientData}`);
+        const response = await fetch(`/api/lists/`, {
+          method: 'GET',
+          headers: {
+            'Client-ID': clientData
+          }
+        });
+        //data returned
+        const data = await response.json();
         // Populate dropdown options using the data
         const dropdown = document.getElementById('listDropdown');
 
@@ -108,7 +120,6 @@
       // Clear existing options in the list dropdown
       listDropdown.innerHTML = '';
       // Populate list dropdown based on the selected client ID
-      console.log(selectedClientId);
       populateListDropdown(selectedClientId);
     });
 

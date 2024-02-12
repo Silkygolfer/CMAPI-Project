@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSV Upload</title>
+</head>
+<body>
+  <h1>Select the Client</h1>
+  <select id="clientDropdown">
+    <option value="">Select a Client</option>
+    <!-- Options will be dynamically populated here -->
+  </select>
+
+  <h2>Name your list</h2>
+  <input type="text" id="listName" disabled> <!-- Initially disabled -->
+  <button id="submitName" disabled>Submit your List name</button>
+
+  <h2>Upload CSV File</h2>
+  <input type="file" id="csvFileInput" name="csvFile" disabled> <!-- Initially disabled -->
+
+  <button id="uploadButton" disabled>Submit</button> <!-- Initially disabled -->
+
+  <div>
+    <a href="index.html"><button>Go back to Main Page</button></a>
+  </div>
+
+  <script type="module">
+
+    import { fetchDataFromApi } from './scripts/apiRequests.js';
+
+    const clientDropdown = document.getElementById('clientDropdown');
+    const listNameInput = document.getElementById('listName');
+    const fileInput = document.getElementById('csvFileInput');
+    const listNameButton = document.getElementById('submitName');
+    const uploadButton = document.getElementById('uploadButton');
+
+    async function populateClientDropdown() {
+      try {
+        const data = await fetchDataFromApi('/api/clients');
+        // Populate dropdown options using the data
+        const dropdown = document.getElementById('clientDropdown');
+        // Clear existing items
+        dropdown.innerHTML = '';
+        // Default option
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.text = 'Select a Client';
+        dropdown.appendChild(defaultOption);
+        // Populate dropdown options
+        data.forEach(item => {
+          const option = document.createElement('option');
+          option.value = item.ClientID;
+          option.textContent = item.Name;
+          dropdown.appendChild(option);
+        });
+      } catch (error) {
+        console.error('Error populating list dropdown: ', error);
+      }
+    };
+
+// Call populateClientDropdown initially
+populateClientDropdown();
+
+//Define clientId
+let clientId;
+let listId;
+
+// Add event listener for client dropdown change
+clientDropdown.addEventListener('change', function() {
+    clientId = this.value;
+    // Enable inputs after selection
+    listNameInput.disabled = false;
+    listNameButton.disabled = false;
+});
+
+// add event listenr for list name submission
+listNameButton.addEventListener('click', async function() {
+    const listName = document.getElementById('listName').value;
+    const listResponse = await fetch(`/api/createList/${clientId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name: listName })
+    });
+    listId = await listResponse.text();
+    listId = listId.substring(1, listId.length - 1);
+    console.log(listId);
+    fileInput.disabled = false;
+    uploadButton.disabled = false;
+    listNameButton.disabled = true;
+});
+
+
+document.getElementById('uploadButton').addEventListener('click', async () => {
+    try {
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onloadend = async () => {
+          const base64data = reader.result.split(',')[1];
+          const csvResponse = await fetch(`/api/fileUpload/${listId}`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ base64data }) // Use the FormData directly as the body
+        });
+        console.log(csvResponse);
+        const csvData = await csvResponse.json();
+        console.log(csvData);
+    };
+   } catch (error) {
+        console.error('Error:', error);
+    }
+});
+
+  </script>
+</body>
+</html>
