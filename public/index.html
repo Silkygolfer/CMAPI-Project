@@ -93,12 +93,18 @@
       }
     }
 
-    async function populateCustomerTable(listID) {
-      const response = await fetchDataFromApi(`/api/customers/${listID}`);
+    async function populateCustomerTable(listId) {
+      const response = await fetch(`/api/customers`, {
+        method: 'GET',
+        headers: {
+          'List-ID': listId
+        }
+      });
       //populate table data
       const table = document.getElementById('customerTable');
       //get Array data
-      const data = response.Results;
+      const returnObject = await response.json();
+      const data = returnObject.Results;
        //clear existing options
       table.innerHTML = ''
       //populate table data

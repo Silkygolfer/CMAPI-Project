@@ -27,8 +27,6 @@
 
   <script type="module">
 
-    import { fetchDataFromApi } from './scripts/apiRequests.js';
-
     const clientDropdown = document.getElementById('clientDropdown');
     const listNameInput = document.getElementById('listName');
     const fileInput = document.getElementById('csvFileInput');
@@ -37,23 +35,27 @@
 
     async function populateClientDropdown() {
       try {
-        const data = await fetchDataFromApi('/api/clients');
-        // Populate dropdown options using the data
-        const dropdown = document.getElementById('clientDropdown');
-        // Clear existing items
+        const response = await fetch(`/api/clients`, {
+          method: 'GET'
+        });
+        //return data to JSON
+        const data = await response.json();
+        // populate dropdown options using the data
+        const dropdown = document.getElementById('clientDropdown')
+        //clear existing items
         dropdown.innerHTML = '';
-        // Default option
+        //default option
         const defaultOption = document.createElement('option');
-        defaultOption.value = '';
+        defaultOption.value = ''
         defaultOption.text = 'Select a Client';
         dropdown.appendChild(defaultOption);
-        // Populate dropdown options
-        data.forEach(item => {
+        //populate dropdown options
+        data.forEach (item => {
           const option = document.createElement('option');
           option.value = item.ClientID;
           option.textContent = item.Name;
           dropdown.appendChild(option);
-        });
+        })
       } catch (error) {
         console.error('Error populating list dropdown: ', error);
       }
@@ -76,17 +78,21 @@ clientDropdown.addEventListener('change', function() {
 
 // add event listenr for list name submission
 listNameButton.addEventListener('click', async function() {
-    const listName = document.getElementById('listName').value;
-    const listResponse = await fetch(`/api/createList/${clientId}`, {
+    const listNameValue = document.getElementById('listName').value;
+    const listName = {
+      Title: listNameValue,
+      UnsubscribeSetting: "AllClientLists",
+      ConfirmedOptIn: false
+    }; 
+    const listResponse = await fetch('/api/createList', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Client-ID': clientId
         },
-        body: JSON.stringify({ name: listName })
+        body: JSON.stringify({ listName }),
     });
     listId = await listResponse.text();
-    listId = listId.substring(1, listId.length - 1);
-    console.log(listId);
     fileInput.disabled = false;
     uploadButton.disabled = false;
     listNameButton.disabled = true;
@@ -96,21 +102,21 @@ listNameButton.addEventListener('click', async function() {
 document.getElementById('uploadButton').addEventListener('click', async () => {
     try {
         const file = fileInput.files[0];
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onloadend = async () => {
-          const base64data = reader.result.split(',')[1];
-          const csvResponse = await fetch(`/api/fileUpload/${listId}`, {
+        const formData = new FormData();
+        formData.append('csvFile', file);
+          const csvResponse = await fetch('/api/fileUpload', {
               method: 'POST',
               headers: {
-                'Content-Type': 'application/json'
+                'List-ID': listId
               },
-              body: JSON.stringify({ base64data }) // Use the FormData directly as the body
+              body: formData
         });
-        console.log(csvResponse);
-        const csvData = await csvResponse.json();
-        console.log(csvData);
-    };
+        if (csvResponse.ok) {
+          alert('Submission Successful!');
+          window.location.reload();
+        } else {
+          console.error('Error: ',alert(csvResponse.statusText));
+        }
    } catch (error) {
         console.error('Error:', error);
     }

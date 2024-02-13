@@ -1,14 +1,14 @@
+const fs = require('fs');
 const csv = require('csv-parser');
-const { Readable } = require('stream');
 
-function csvToJson(csvData) {
+function csvToJson(filePath) {
     return new Promise((resolve, reject) => {
         const results = [];
 
-        // Convert the CSV string to a readable stream
-        const stream = Readable.from(csvData);
+        // Create a readable stream from the file
+        const fileStream = fs.createReadStream(filePath);
 
-        stream
+        fileStream
             .pipe(csv())
             .on('data', (data) => {
                 // Transform each row of CSV into the format required by the API
@@ -35,7 +35,6 @@ function csvToJson(csvData) {
                 reject(error);
             });
     });
-};
-
+}
 
 module.exports = csvToJson;
